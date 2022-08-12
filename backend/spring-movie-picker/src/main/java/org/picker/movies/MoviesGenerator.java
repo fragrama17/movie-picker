@@ -1,7 +1,7 @@
-package org.generator.movies;
+package org.picker.movies;
 
 import lombok.Value;
-import org.generator.movies.model.Movie;
+import org.picker.movies.model.Movie;
 import org.jeasy.random.EasyRandom;
 import org.springframework.stereotype.Component;
 

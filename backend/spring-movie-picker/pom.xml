@@ -14,7 +14,7 @@
     <name>movies</name>
     <description>movies</description>
     <properties>
-        <java.version>18</java.version>
+        <java.version>16</java.version>
     </properties>
     <dependencies>
         <dependency>
@@ -26,15 +26,14 @@
             <artifactId>spring-batch-core</artifactId>
             <version>4.3.0</version>
         </dependency>
-<!--        		<dependency>  DON'T NEED FOR NOW -->
-<!--        			<groupId>org.springframework.boot</groupId>-->
-<!--        			<artifactId>spring-boot-starter-batch</artifactId>-->
-<!--        		</dependency>-->
-<!--        		<dependency>-->
-<!--        			<groupId>org.springframework.batch</groupId>-->
-<!--        			<artifactId>spring-batch-test</artifactId>-->
-<!--        			<scope>test</scope>-->
-<!--        		</dependency>-->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-mongodb-reactive</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-webflux</artifactId>
+        </dependency>
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>

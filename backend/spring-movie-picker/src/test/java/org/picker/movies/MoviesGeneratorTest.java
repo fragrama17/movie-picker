@@ -1,7 +1,7 @@
-package org.generator.movies;
+package org.picker.movies;
 
 import com.github.javafaker.Faker;
-import org.generator.movies.model.Movie;
+import org.picker.movies.model.Movie;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
