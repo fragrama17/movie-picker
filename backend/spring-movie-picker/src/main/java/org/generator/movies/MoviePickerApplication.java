@@ -8,10 +8,10 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 
 @SpringBootApplication
-public class MoviesPickerApplication {
+public class MoviePickerApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(MoviesPickerApplication.class, args);
+        SpringApplication.run(MoviePickerApplication.class, args);
     }
 
     @Bean

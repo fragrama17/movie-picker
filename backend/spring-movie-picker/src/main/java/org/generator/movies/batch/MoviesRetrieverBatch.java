@@ -6,6 +6,7 @@ import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
+import org.springframework.batch.core.launch.JobLauncher;
 import org.springframework.batch.item.ItemReader;
 import org.springframework.batch.item.ItemWriter;
 import org.springframework.batch.item.ParseException;
@@ -18,17 +19,21 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.io.FileSystemResource;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import java.util.List;
 
 @Slf4j
-public class MoviesGeneratorBatch {
+public class MoviesRetrieverBatch {
 
     @Autowired
     private JobBuilderFactory jobs;
 
     @Autowired
     private StepBuilderFactory steps;
+
+    @Autowired
+    private JobLauncher jobLauncher;
 
     @Bean
     public ItemReader<MovieCSV> itemReader() throws UnexpectedInputException, ParseException {
@@ -40,7 +45,7 @@ public class MoviesGeneratorBatch {
         reader.setResource(new FileSystemResource("datasets/movies.csv"));
         reader.setLinesToSkip(1);
 
-        lineTokenizer.setNames("id", "name", "genres");
+        lineTokenizer.setNames("movieId", "title", "genres");
         fieldSetMapper.setTargetType(MovieCSV.class);
 
         defaultLineMapper.setLineTokenizer(lineTokenizer);
@@ -61,6 +66,7 @@ public class MoviesGeneratorBatch {
                 .<MovieCSV, List<MovieCSV>>chunk(10)
                 .reader(reader)
                 .writer(writer)
+                .taskExecutor(new ThreadPoolTaskExecutor())
                 .build();
     }
 
