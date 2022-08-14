@@ -1,0 +1,11 @@
+logging:
+  level:
+    org.picker.movies: debug
+
+mongo:
+  uri: "mongodb://localhost:27017"
+
+batch:
+  chunk-size: 100
+  thread-pool-core: 6
+  thread-pool-size: 12

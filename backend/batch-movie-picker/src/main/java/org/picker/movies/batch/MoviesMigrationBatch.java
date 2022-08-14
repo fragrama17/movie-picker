@@ -1,13 +1,13 @@
 package org.picker.movies.batch;
 
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.picker.movies.model.Genre;
 import org.picker.movies.model.Movie;
 import org.picker.movies.model.MovieCSV;
 import org.picker.movies.repository.MoviesRepository;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
-import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
 import org.springframework.batch.item.ItemReader;
@@ -18,6 +18,7 @@ import org.springframework.batch.item.file.FlatFileItemReader;
 import org.springframework.batch.item.file.mapping.BeanWrapperFieldSetMapper;
 import org.springframework.batch.item.file.mapping.DefaultLineMapper;
 import org.springframework.batch.item.file.transform.DelimitedLineTokenizer;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
@@ -31,13 +32,19 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 @Slf4j
 @Configuration
-@EnableBatchProcessing
 public class MoviesMigrationBatch {
 
     private final JobBuilderFactory jobs;
     private final StepBuilderFactory steps;
     private final MoviesRepository moviesRepository;
     private final AtomicInteger counter = new AtomicInteger(0);
+
+    @Value("${batch.chunk-size}")
+    private int chunkSize;
+    @Value("${batch.thread-pool-core}")
+    private int threadPoolCore;
+    @Value("${batch.thread-pool-size}")
+    private int threadPoolSize;
 
     public MoviesMigrationBatch(JobBuilderFactory jobs, StepBuilderFactory steps, MoviesRepository moviesRepository) {
         this.jobs = jobs;
@@ -46,43 +53,46 @@ public class MoviesMigrationBatch {
     }
 
     @Bean
-    public FlatFileItemReader<MovieCSV> itemReader() throws UnexpectedInputException, ParseException {
+    public FlatFileItemReader<MovieCSV> reader() throws UnexpectedInputException, ParseException {
         FlatFileItemReader<MovieCSV> reader = new FlatFileItemReader<>();
         DefaultLineMapper<MovieCSV> defaultLineMapper = new DefaultLineMapper<>();
         DelimitedLineTokenizer lineTokenizer = new DelimitedLineTokenizer(",");
         BeanWrapperFieldSetMapper<MovieCSV> fieldSetMapper = new BeanWrapperFieldSetMapper<>();
-
+        // Line Mapper configuration
         lineTokenizer.setNames("movieId", "title", "genres");
         fieldSetMapper.setTargetType(MovieCSV.class);
-
         defaultLineMapper.setLineTokenizer(lineTokenizer);
         defaultLineMapper.setFieldSetMapper(fieldSetMapper);
-
-        reader.setResource(new ClassPathResource("datasets/movies.csv"));
-        reader.setLinesToSkip(1);
+        // Reader configuration
         reader.setLineMapper(defaultLineMapper);
+        reader.setLinesToSkip(1);
+        reader.setResource(new ClassPathResource("datasets/movies.csv"));
 
         return reader;
     }
 
     @Bean
-    public ItemWriter<MovieCSV> itemWriter() {
-        // convert in Movie -> migration to db
-        return movies -> {
+    public ItemWriter<MovieCSV> writer() {
+        // convert from MovieCSV to Movie -> migration to db
+        return movieCSVS -> {
             List<Movie> moviesDb = new ArrayList<>();
-            movies.forEach(m -> moviesDb.add(Movie.builder()
-                    .id(m.getMovieId())
-                    .title(m.getTitle())
-                    .genres(Arrays
-                            .stream(m.getGenres().split("\\|"))
-                            .toList())
-                    .build()));
+            movieCSVS.forEach(m ->
+                    moviesDb.add(Movie.builder()
+                            .id(m.getMovieId())
+                            .title(m.getTitle().split(YEAR_REGEX)[0].trim())
+                            .year(extractYear(m.getTitle()))
+                            .genres(Arrays
+                                    .stream(m.getGenres().split("\\|"))
+                                    .map(this::extractGenres)
+                                    .map(Genre::valueOf)
+                                    .toList())
+                            .build()));
 
             moviesRepository.saveAll(moviesDb)
-                    .subscribe(m -> log.debug("movie {} saved to db", m));
+                    .subscribe();
 
             int currentSize = counter.get();
-            counter.set(currentSize + movies.size());
+            counter.set(currentSize + movieCSVS.size());
             log.debug("processed {} movies on 62423 total, output may not be ordered", counter.get());
         };
     }
@@ -90,8 +100,8 @@ public class MoviesMigrationBatch {
     @Bean
     protected Step migrationStep(ItemReader<MovieCSV> reader, ItemWriter<MovieCSV> writer, TaskExecutor batchExecutor) {
         return steps
-                .get("step1")
-                .<MovieCSV, MovieCSV>chunk(100)//BEST PERFORMANCE FOR AMD RYZEN 5600G
+                .get("migration-step")
+                .<MovieCSV, MovieCSV>chunk(chunkSize)//BEST PERFORMANCE FOR AMD RYZEN 5600G
                 .reader(reader)
                 .writer(writer)
                 .taskExecutor(batchExecutor)
@@ -101,7 +111,7 @@ public class MoviesMigrationBatch {
     @Bean(name = "moviesBatchJob")
     public Job job(Step migrationStep) {
         return jobs
-                .get("job")
+                .get("movies-migration-job")
                 .start(migrationStep)
                 .build();
     }
@@ -109,9 +119,29 @@ public class MoviesMigrationBatch {
     @Bean
     public TaskExecutor batchExecutor() {
         ThreadPoolTaskExecutor poolTaskExecutor = new ThreadPoolTaskExecutor();
-        poolTaskExecutor.setCorePoolSize(6); //BEST PERFORMANCE FOR AMD RYZEN 5600G
-        poolTaskExecutor.setMaxPoolSize(12);
+        poolTaskExecutor.setCorePoolSize(threadPoolCore); //BEST PERFORMANCE FOR AMD RYZEN 5600G
+        poolTaskExecutor.setMaxPoolSize(threadPoolSize);
 
         return poolTaskExecutor;
+    }
+
+    private static final String YEAR_REGEX = "(\\(\\d{4}\\))+";
+
+    private int extractYear(String yearInTitle) {
+        String year = "";
+        if (yearInTitle.length() > 5)
+            year = yearInTitle.substring(yearInTitle.length() - 5, yearInTitle.length() - 1);
+        if (StringUtils.isNumeric(year))
+            return Integer.parseInt(year);
+        return 0;
+    }
+
+    private String extractGenres(String genres) {
+        return genres
+                .replace("-", "_")
+                .replace("(", "")
+                .replace(")", "")
+                .replace(" ", "_")
+                .toUpperCase();
     }
 }
