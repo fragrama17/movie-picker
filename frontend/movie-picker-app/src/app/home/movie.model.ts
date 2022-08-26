@@ -9,28 +9,6 @@ export class Movie {
   }
 }
 
-export enum Genre {
-  ACTION,
-  ADVENTURE,
-  ANIMATION,
-  CHILDREN,
-  COMEDY,
-  CRIME,
-  DOCUMENTARY,
-  DRAMA,
-  FANTASY,
-  FILM_NOIR,
-  HORROR,
-  IMAX,
-  MUSICAL,
-  MYSTERY,
-  ROMANCE,
-  SCI_FI,
-  THRILLER,
-  WAR,
-  WESTERN,
-}
-
 export const genresList = [
   'ACTION',
   'ADVENTURE',

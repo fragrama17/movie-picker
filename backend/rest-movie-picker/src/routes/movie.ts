@@ -40,7 +40,7 @@ router.get('/movies', async (req: Request, res: Response): Promise<void> => {
     //if page=1 nothing to skip -> page=0
     const movies = await Movie.find(dbQuery).skip((--page) * pageSize).limit(pageSize);
 
-    console.log('sending the response to..', req.ip, new Date());
+    console.log('sending the response to', req.ip,' at timestamp: ', new Date());
     res.send({
         page: ++page,
         pageSize: pageSize,
