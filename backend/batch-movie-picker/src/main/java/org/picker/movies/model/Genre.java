@@ -1,7 +1,5 @@
 package org.picker.movies.model;
 
-import lombok.Getter;
-
 public enum Genre {
     ACTION,
     ADVENTURE,

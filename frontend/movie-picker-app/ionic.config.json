@@ -1,0 +1,7 @@
+{
+  "name": "movie-picker-app",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular"
+}

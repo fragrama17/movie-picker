@@ -1,0 +1,6 @@
+{
+	"appId": "io.ionic.starter",
+	"appName": "movie-picker-app",
+	"webDir": "www",
+	"bundledWebRuntime": false
+}

@@ -16,7 +16,7 @@ import java.util.List;
 public class Movie {
     private String id;
     private String title;
-    private int year;
+    private Integer year; // using the wrapper mongo is going to save nothing if year is null
     private List<Genre> genres;
 
 //    NO DECENT DATA-SETS WITH THIS INFO :(

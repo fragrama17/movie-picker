@@ -5,7 +5,8 @@ logging:
 mongo:
   uri: "mongodb://localhost:27017"
 
+#//BEST PERFORMANCE FOR AMD RYZEN 5600G
 batch:
   chunk-size: 100
-  thread-pool-core: 6
-  thread-pool-size: 12
+  thread-pool-core: 12
+  thread-pool-size: 50

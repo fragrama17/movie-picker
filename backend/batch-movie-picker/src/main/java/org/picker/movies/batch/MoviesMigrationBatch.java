@@ -79,7 +79,7 @@ public class MoviesMigrationBatch {
             movieCSVS.forEach(m ->
                     moviesDb.add(Movie.builder()
                             .id(m.getMovieId())
-                            .title(m.getTitle().split(YEAR_REGEX)[0].trim())
+                            .title(fixTitleBug(m.getTitle().split(YEAR_REGEX)[0].trim()))
                             .year(extractYear(m.getTitle()))
                             .genres(Arrays
                                     .stream(m.getGenres().split("\\|"))
@@ -101,7 +101,7 @@ public class MoviesMigrationBatch {
     protected Step migrationStep(ItemReader<MovieCSV> reader, ItemWriter<MovieCSV> writer, TaskExecutor batchExecutor) {
         return steps
                 .get("migration-step")
-                .<MovieCSV, MovieCSV>chunk(chunkSize)//BEST PERFORMANCE FOR AMD RYZEN 5600G
+                .<MovieCSV, MovieCSV>chunk(chunkSize)
                 .reader(reader)
                 .writer(writer)
                 .taskExecutor(batchExecutor)
@@ -119,7 +119,7 @@ public class MoviesMigrationBatch {
     @Bean
     public TaskExecutor batchExecutor() {
         ThreadPoolTaskExecutor poolTaskExecutor = new ThreadPoolTaskExecutor();
-        poolTaskExecutor.setCorePoolSize(threadPoolCore); //BEST PERFORMANCE FOR AMD RYZEN 5600G
+        poolTaskExecutor.setCorePoolSize(threadPoolCore);
         poolTaskExecutor.setMaxPoolSize(threadPoolSize);
 
         return poolTaskExecutor;
@@ -127,13 +127,20 @@ public class MoviesMigrationBatch {
 
     private static final String YEAR_REGEX = "(\\(\\d{4}\\))+";
 
-    private int extractYear(String yearInTitle) {
+    private Integer extractYear(String yearInTitle) {
         String year = "";
         if (yearInTitle.length() > 5)
             year = yearInTitle.substring(yearInTitle.length() - 5, yearInTitle.length() - 1);
         if (StringUtils.isNumeric(year))
             return Integer.parseInt(year);
-        return 0;
+        return null;
+    }
+
+    private String fixTitleBug(String title) {
+        StringBuilder sb = new StringBuilder();
+        if (title.endsWith(", The"))
+            return sb.append("The ").append(title, 0, title.length() - 5).toString();
+        return title;
     }
 
     private String extractGenres(String genres) {
