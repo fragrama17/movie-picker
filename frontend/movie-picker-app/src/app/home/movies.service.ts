@@ -10,6 +10,10 @@ interface MovieResponse {
   movies: Movie[]
 }
 
+interface TrailerResponse {
+  url: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -18,21 +22,23 @@ export class MoviesService {
   constructor(private httpClient: HttpClient) {
   }
 
-  fetchMovies(genres, year?, titleRegex?): Promise<MovieResponse> {
+  fetchMovies(genres: string[], from: number, to: number, titleRegex: string): Promise<MovieResponse> {
     let params = `?genres=${genres}`;
 
-    if (year) {
-      params += `&from=${year}&to=${year}`
+    if (from && to) {
+      params += `&from=${from}&to=${to}`
     }
     if (titleRegex) {
       params += `&title=${titleRegex}`
     }
-    console.log('genres picked: ', genres);
-    try {
-      return this.httpClient.get<MovieResponse>(environment.restServer + '/movies' + params).toPromise();
-    } catch (e) {
 
-    }
+    return this.httpClient.get<MovieResponse>(environment.moviesServer + `/movies${params}`).toPromise();
+
+  }
+
+  fetchTrailer(title: string, year: number) {
+    return this.httpClient.get<TrailerResponse>(environment.trailersServer + `/trailer?title=${title}+${year}+movie+trailer`).toPromise();
+
   }
 
 }

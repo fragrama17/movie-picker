@@ -41,6 +41,7 @@ router.get('/movies', async (req: Request, res: Response): Promise<void> => {
     const movies = await Movie.find(dbQuery).skip((--page) * pageSize).limit(pageSize);
 
     console.log('sending the response to', req.ip,' at timestamp: ', new Date());
+    console.log(movies);
     res.send({
         page: ++page,
         pageSize: pageSize,
