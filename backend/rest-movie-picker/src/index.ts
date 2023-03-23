@@ -14,6 +14,6 @@ app.use('/api/v1', moviesRouter);
 
 connect(dbUri)
     .then(() => app.listen(3000, () => {
-        console.log('Connected to mongoDB')
+        console.log('Connected to mongoDB');
         console.log('Listening on port 3000');
     }));

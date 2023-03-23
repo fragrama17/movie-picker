@@ -25,12 +25,4 @@ public class MoviePickerApplication {
         System.exit(SpringApplication.exit(context));
     }
 
-    @Value("${mongo.uri}")
-    private String mongoUri;
-
-    @Bean
-    public MongoClient mongoClient() {
-        return MongoClients.create(mongoUri);
-    }
-
 }

@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Configuration
@@ -78,14 +79,14 @@ public class MoviesMigrationBatch {
             List<Movie> moviesDb = new ArrayList<>();
             movieCSVS.forEach(m ->
                     moviesDb.add(Movie.builder()
-                            .id(m.getMovieId())
+                            .id(Long.parseLong(m.getMovieId()))
                             .title(fixTitleBug(m.getTitle().split(YEAR_REGEX)[0].trim()))
                             .year(extractYear(m.getTitle()))
                             .genres(Arrays
                                     .stream(m.getGenres().split("\\|"))
                                     .map(this::extractGenres)
                                     .map(Genre::valueOf)
-                                    .toList())
+                                    .collect(Collectors.toList()))
                             .build()));
 
             moviesRepository.saveAll(moviesDb)

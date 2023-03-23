@@ -14,7 +14,7 @@ import java.util.List;
 @Builder
 @Document("movies")
 public class Movie {
-    private String id;
+    private Long id;
     private String title;
     private Integer year; // using the wrapper mongo is going to save nothing if year is null
     private List<Genre> genres;
